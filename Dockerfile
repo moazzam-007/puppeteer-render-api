@@ -1,7 +1,7 @@
-# Official Puppeteer image use kar rahe hain (Best for Render)
+# Official Puppeteer image use kar rahe hain
 FROM ghcr.io/puppeteer/puppeteer:19.7.2
 
-# Root user permission ki zaroorat pad sakti hai
+# Root user permission
 USER root
 
 # App directory banate hain
@@ -10,14 +10,14 @@ WORKDIR /usr/src/app
 # Dependencies file copy karein
 COPY package*.json ./
 
-# Dependencies install karein (production flag ke sath taaki devDependencies skip hon)
-# --ignore-scripts zaroori hai taaki puppeteer fir se chrome download na karne lage
-RUN npm ci --only=production --ignore-scripts
+# --- YAHAN CHANGE KIYA HAI ---
+# 'npm ci' ki jagah 'npm install' use kar rahe hain taaki bina lock file ke error na aaye
+RUN npm install --omit=dev --ignore-scripts
 
 # Baaki code copy karein
 COPY . .
 
-# App non-root user (pptruser) ke sath chalayenge security ke liye
+# Security ke liye wapas puppeteer user par switch karein
 USER pptruser
 
 # Port expose karein
