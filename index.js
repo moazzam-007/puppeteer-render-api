@@ -4,6 +4,7 @@ require("dotenv").config();
 
 const app = express();
 
+// Payload size limit badhaya taaki badi files handle ho sakein
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
@@ -22,18 +23,17 @@ app.post("/convert", async (req, res) => {
   let browser = null;
 
   try {
-    // UPDATED LAUNCH ARGUMENTS
+    // Browser launch settings (Crash fix ke sath)
     browser = await puppeteer.launch({
       headless: "new",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage", // Memory handling ke liye zaroori
+        "--disable-dev-shm-usage", // Memory leak rokne ke liye important
         "--disable-gpu",
         "--no-first-run",
         "--no-zygote",
-        // "--single-process",  <-- REMOVED: Ye crash karwa raha tha
-        "--disable-extensions",
+        "--disable-extensions"
       ],
       executablePath:
         process.env.NODE_ENV === "production"
@@ -43,19 +43,20 @@ app.post("/convert", async (req, res) => {
 
     const page = await browser.newPage();
 
-    // Viewport set karte hain
+    // Image size set karein
     await page.setViewport({ 
       width: parseInt(width), 
       height: parseInt(height),
       deviceScaleFactor: 1 
     });
 
-    // Content Load strategy
+    // HTML Content load karein (Timeout badhaya 15s tak)
     await page.setContent(html, { 
       waitUntil: "domcontentloaded", 
       timeout: 15000 
     });
 
+    // Screenshot lein
     const imageBuffer = await page.screenshot({ 
       type: type === "jpeg" ? "jpeg" : "png",
       fullPage: false,
@@ -64,10 +65,12 @@ app.post("/convert", async (req, res) => {
 
     console.log("Image generated successfully.");
     
+    // Safai: Browser band karein
     await page.close();
     await browser.close();
     browser = null;
 
+    // Image wapas bhejein
     res.set("Content-Type", `image/${type === "jpeg" ? "jpeg" : "png"}`);
     res.send(imageBuffer);
 
@@ -80,52 +83,4 @@ app.post("/convert", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
-});        "--mute-audio",
-      ],
-      executablePath:
-        process.env.NODE_ENV === "production"
-          ? process.env.PUPPETEER_EXECUTABLE_PATH
-          : puppeteer.executablePath(),
-    });
-
-    const page = await browser.newPage();
-
-    // 2. Viewport Set
-    await page.setViewport({ 
-      width: parseInt(width), 
-      height: parseInt(height),
-      deviceScaleFactor: 1 // Free tier ke liye 1 rakha hai (RAM saves), Retina ke liye 2 karein agar crash na ho
-    });
-
-    // 3. Optimized Loading Strategy
-    // 'domcontentloaded' fast hota hai, external images ke load hone ka infinite wait nahi karega
-    await page.setContent(html, { 
-      waitUntil: "domcontentloaded", 
-      timeout: 10000 // Max 10 seconds wait karega
-    });
-
-    // 4. Screenshot
-    const imageBuffer = await page.screenshot({ 
-      type: type === "jpeg" ? "jpeg" : "png",
-      fullPage: false,
-      omitBackground: true
-    });
-
-    // 5. Cleanup (Memory Leak se bachne ke liye page pehle close karein)
-    await page.close();
-    await browser.close();
-    browser = null; // Ensure nullification
-
-    res.set("Content-Type", `image/${type === "jpeg" ? "jpeg" : "png"}`);
-    res.send(imageBuffer);
-
-  } catch (error) {
-    console.error("Conversion Error:", error.message);
-    if (browser) await browser.close();
-    res.status(500).send({ error: "Failed", details: error.message });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 });
