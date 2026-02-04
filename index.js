@@ -4,13 +4,13 @@ require("dotenv").config();
 
 const app = express();
 
-// Payload size limit badhaya taaki badi files handle ho sakein
+// Payload size limit badhaya
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 const PORT = process.env.PORT || 4000;
 
-app.get("/", (req, res) => res.send("Render Puppeteer Service is Live!"));
+app.get("/", (req, res) => res.send("Render Puppeteer Service is Live with HD Fonts! 🚀"));
 
 app.post("/convert", async (req, res) => {
   const { html, width = 1080, height = 1080, type = "png" } = req.body;
@@ -43,14 +43,15 @@ app.post("/convert", async (req, res) => {
 
     const page = await browser.newPage();
 
-    // Image size set karein
+    // --- NEW CHANGE: HD Quality ---
+    // deviceScaleFactor: 2 kar diya hai (Sharp Text ke liye)
     await page.setViewport({ 
       width: parseInt(width), 
       height: parseInt(height),
-      deviceScaleFactor: 1 
+      deviceScaleFactor: 2 
     });
 
-    // HTML Content load karein (Timeout badhaya 15s tak)
+    // HTML Content load karein (Timeout 15s)
     await page.setContent(html, { 
       waitUntil: "domcontentloaded", 
       timeout: 15000 
@@ -63,7 +64,7 @@ app.post("/convert", async (req, res) => {
       omitBackground: true
     });
 
-    console.log("Image generated successfully.");
+    console.log("HD Image generated successfully.");
     
     // Safai: Browser band karein
     await page.close();
