@@ -4,10 +4,11 @@ FROM ghcr.io/puppeteer/puppeteer:19.7.2
 # Root user permission
 USER root
 
-# --- OPTIMIZED & SAFE FIX ---
-# 1. Google ke saare list files delete kar rahe hain (google*.list)
-# 2. Saare fonts ek saath install kar rahe hain (Fast)
-# 3. Baad mein kachra saaf kar rahe hain (apt-get clean)
+# --- FINAL FONT FIX ---
+# fonts-hosny-amiri: Quranic symbols (ﷺ) ke liye best
+# fonts-scheherazade: Aapka naya requested Arabic font
+# fonts-liberation: Georgia/Times New Roman ka Linux version
+# fonts-noto-color-emoji: Emojis ke liye
 RUN rm -f /etc/apt/sources.list.d/google*.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -17,22 +18,25 @@ RUN rm -f /etc/apt/sources.list.d/google*.list \
        fonts-freefont-ttf \
        fonts-thai-tlwg \
        fonts-noto-color-emoji \
+       fonts-hosny-amiri \
+       fonts-scheherazade \
+       fonts-liberation \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # App directory
 WORKDIR /usr/src/app
 
-# Files copy
+# Dependencies copy
 COPY package*.json ./
 
-# Safe install command use kar rahe hain
+# Install dependencies
 RUN npm install --omit=dev --ignore-scripts
 
-# Baaki code copy
+# App source copy
 COPY . .
 
-# Security user switch
+# Switch user
 USER pptruser
 
 # Port expose
