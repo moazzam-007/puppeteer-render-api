@@ -4,13 +4,12 @@ require("dotenv").config();
 
 const app = express();
 
-// Payload size limit badhaya
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 const PORT = process.env.PORT || 4000;
 
-app.get("/", (req, res) => res.send("Render Puppeteer Service is Live with HD Fonts! 🚀"));
+app.get("/", (req, res) => res.send("Render Puppeteer Service is Live (Ultra HD)! 🚀"));
 
 app.post("/convert", async (req, res) => {
   const { html, width = 1080, height = 1080, type = "png" } = req.body;
@@ -23,13 +22,12 @@ app.post("/convert", async (req, res) => {
   let browser = null;
 
   try {
-    // Browser launch settings (Crash fix ke sath)
     browser = await puppeteer.launch({
       headless: "new",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage", // Memory leak rokne ke liye important
+        "--disable-dev-shm-usage",
         "--disable-gpu",
         "--no-first-run",
         "--no-zygote",
@@ -43,35 +41,31 @@ app.post("/convert", async (req, res) => {
 
     const page = await browser.newPage();
 
-    // --- NEW CHANGE: HD Quality ---
-    // deviceScaleFactor: 2 kar diya hai (Sharp Text ke liye)
+    // --- QUALITY UPGRADE ---
+    // deviceScaleFactor: 3 (Ultra Sharp Mobile Quality)
     await page.setViewport({ 
       width: parseInt(width), 
       height: parseInt(height),
-      deviceScaleFactor: 2 
+      deviceScaleFactor: 3 
     });
 
-    // HTML Content load karein (Timeout 15s)
     await page.setContent(html, { 
       waitUntil: "domcontentloaded", 
       timeout: 15000 
     });
 
-    // Screenshot lein
     const imageBuffer = await page.screenshot({ 
       type: type === "jpeg" ? "jpeg" : "png",
       fullPage: false,
       omitBackground: true
     });
 
-    console.log("HD Image generated successfully.");
+    console.log("Ultra HD Image generated.");
     
-    // Safai: Browser band karein
     await page.close();
     await browser.close();
     browser = null;
 
-    // Image wapas bhejein
     res.set("Content-Type", `image/${type === "jpeg" ? "jpeg" : "png"}`);
     res.send(imageBuffer);
 
