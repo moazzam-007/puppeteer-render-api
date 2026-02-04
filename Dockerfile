@@ -4,11 +4,7 @@ FROM ghcr.io/puppeteer/puppeteer:19.7.2
 # Root user permission
 USER root
 
-# --- FINAL FONT FIX ---
-# fonts-hosny-amiri: Quranic symbols (ﷺ) ke liye best
-# fonts-scheherazade: Aapka naya requested Arabic font
-# fonts-liberation: Georgia/Times New Roman ka Linux version
-# fonts-noto-color-emoji: Emojis ke liye
+# --- FIX: Correct Package Name for Scheherazade ---
 RUN rm -f /etc/apt/sources.list.d/google*.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -19,7 +15,7 @@ RUN rm -f /etc/apt/sources.list.d/google*.list \
        fonts-thai-tlwg \
        fonts-noto-color-emoji \
        fonts-hosny-amiri \
-       fonts-scheherazade \
+       fonts-sil-scheherazade \
        fonts-liberation \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
