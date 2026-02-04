@@ -1,34 +1,42 @@
-# Official Puppeteer image use kar rahe hain
+# Official Puppeteer image
 FROM ghcr.io/puppeteer/puppeteer:19.7.2
 
-# Root user permission (Zaroori hai fonts install karne ke liye)
+# Root user permission
 USER root
 
-# --- FIX: Google Chrome Source List Remove kar rahe hain ---
-# Kyunki iski GPG key fail ho rahi hai aur humein sirf fonts chahiye.
-RUN rm -f /etc/apt/sources.list.d/google-chrome.list \
+# --- OPTIMIZED & SAFE FIX ---
+# 1. Google ke saare list files delete kar rahe hain (google*.list)
+# 2. Saare fonts ek saath install kar rahe hain (Fast)
+# 3. Baad mein kachra saaf kar rahe hain (apt-get clean)
+RUN rm -f /etc/apt/sources.list.d/google*.list \
     && apt-get update \
-    && apt-get install -y wget gnupg \
-    && apt-get install -y fonts-kacst fonts-freefont-ttf fonts-thai-tlwg fonts-noto-color-emoji \
+    && apt-get install -y --no-install-recommends \
+       wget \
+       gnupg \
+       fonts-kacst \
+       fonts-freefont-ttf \
+       fonts-thai-tlwg \
+       fonts-noto-color-emoji \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# App directory banate hain
+# App directory
 WORKDIR /usr/src/app
 
-# Dependencies file copy karein
+# Files copy
 COPY package*.json ./
 
-# 'npm ci' ki jagah 'npm install' (Bina lock file ke liye safe)
+# Safe install command use kar rahe hain
 RUN npm install --omit=dev --ignore-scripts
 
-# Baaki code copy karein
+# Baaki code copy
 COPY . .
 
-# Security ke liye wapas puppeteer user par switch karein
+# Security user switch
 USER pptruser
 
-# Port expose karein
+# Port expose
 EXPOSE 4000
 
-# Server start command
+# Start command
 CMD [ "node", "index.js" ]
