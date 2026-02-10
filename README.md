@@ -55,7 +55,7 @@ https://your-app-name.onrender.com
 ```
 GET https://your-app-name.onrender.com/
 ```
-Response: "Optimized Render Puppeteer Service is Running!"
+Response: "Render Puppeteer Service is Live (Ultra HD)! 🚀"
 
 ### Convert HTML to Image
 **Endpoint:** `POST /convert`
@@ -80,6 +80,129 @@ Response: "Optimized Render Puppeteer Service is Running!"
 
 ---
 
+## Article Tracking API (NEW)
+
+Ye endpoints workflow automation ke liye hain taake same article baar baar select na ho.
+
+### Check if Article is Used
+**Endpoint:** `GET /article/check/:url`
+
+URL ko encode karna zaroori hai (encodeURIComponent use karo).
+
+**Example:**
+```bash
+curl "https://your-app.onrender.com/article/check/https%3A%2F%2Fexample.com%2Farticle-1"
+```
+
+**Response:**
+```json
+{
+  "url": "https://example.com/article-1",
+  "used": true,
+  "totalUsedArticles": 5
+}
+```
+
+### Mark Article as Used
+**Endpoint:** `POST /article/mark-used`
+
+**Request Body:**
+```json
+{
+  "url": "https://example.com/article-1",
+  "title": "Article Title (optional)",
+  "timestamp": "2026-02-10T12:00:00Z (optional)"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "url": "https://example.com/article-1",
+  "wasAlreadyUsed": false,
+  "totalUsedArticles": 6
+}
+```
+
+### Get All Used Articles
+**Endpoint:** `GET /article/used`
+
+**Response:**
+```json
+{
+  "usedArticles": [
+    "https://example.com/article-1",
+    "https://example.com/article-2"
+  ],
+  "count": 2,
+  "log": [
+    {
+      "url": "https://example.com/article-1",
+      "title": "Article Title",
+      "timestamp": "2026-02-10T12:00:00Z",
+      "action": "marked_used"
+    }
+  ]
+}
+```
+
+### Batch Check Multiple Articles
+**Endpoint:** `POST /article/batch-check`
+
+Ye endpoint multiple articles ko ek saath check karta hai aur unused articles return karta hai.
+
+**Request Body:**
+```json
+{
+  "urls": [
+    "https://example.com/article-1",
+    "https://example.com/article-2",
+    "https://example.com/article-3"
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "results": [
+    { "url": "https://example.com/article-1", "used": true },
+    { "url": "https://example.com/article-2", "used": false },
+    { "url": "https://example.com/article-3", "used": false }
+  ],
+  "unusedArticles": [
+    "https://example.com/article-2",
+    "https://example.com/article-3"
+  ],
+  "unusedCount": 2,
+  "totalUsedArticles": 1
+}
+```
+
+### Reset Used Articles
+**Endpoint:** `POST /article/reset`
+
+**Request Body:**
+```json
+{
+  "confirm": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "All used articles have been reset",
+  "previousCount": 10
+}
+```
+
+**Note:** Reset sirf used articles ko clear karta hai, log audit ke liye preserve rehta hai.
+
+---
+
 ## Testing with cURL
 
 Windows PowerShell me:
@@ -96,6 +219,55 @@ Invoke-RestMethod -Uri "https://your-app-name.onrender.com/convert" -Method Post
 ---
 
 ## n8n Integration Tips
+
+### Workflow Integration (Duplicate Article Prevention)
+
+Is article tracking API ko apne n8n workflow me integrate karne ke liye:
+
+**Step 1: Get WordPress Posts**
+```
+WordPress node se posts fetch karo
+```
+
+**Step 2: Batch Check Articles**
+```
+HTTP Request node:
+- Method: POST
+- URL: https://your-app.onrender.com/article/batch-check
+- Body:
+  {
+    "urls": {{ JSON.stringify($json.posts.map(p => p.link)) }}
+  }
+```
+
+**Step 3: Select Random Unused Article**
+```javascript
+// Code node
+const unusedArticles = $json.unusedArticles;
+if (unusedArticles.length === 0) {
+  throw new Error('No unused articles available');
+}
+const randomIndex = Math.floor(Math.random() * unusedArticles.length);
+return [{ json: { selectedUrl: unusedArticles[randomIndex] } }];
+```
+
+**Step 4: Mark Article as Used**
+```
+HTTP Request node:
+- Method: POST  
+- URL: https://your-app.onrender.com/article/mark-used
+- Body:
+  {
+    "url": "{{ $json.selectedUrl }}",
+    "title": "{{ $json.title }}",
+    "timestamp": "{{ new Date().toISOString() }}"
+  }
+```
+
+**Step 5: Process Article**
+```
+Continue with content extraction and generation
+```
 
 ### Cold Start Problem Solution
 Free tier server 15 minutes baad sleep mode me chala jata hai. Pehli request me 40-50 second lag sakte hain.
@@ -131,7 +303,12 @@ Agar ye error aaye to:
 
 ## Production Notes
 
-1. **Free Tier Limitations:**
+1. **Article Tracking Storage:**
+   - Default: In-memory storage (data lost on restart)
+   - For production: Consider adding Redis or database persistence
+   - Current implementation is suitable for development and testing
+
+2. **Free Tier Limitations:**
    - 512MB RAM (isliye code optimized hai)
    - 15 minute inactivity ke baad sleep
    - Cold start: 30-50 seconds
