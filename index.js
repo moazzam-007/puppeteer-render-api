@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 4000;
 
 // Article tracking storage (in-memory)
 // In production, you might want to use Redis or a database
-let usedArticles = new Set();
-let articleUsageLog = [];
+const usedArticles = new Set();
+const articleUsageLog = [];
 
 app.get("/", (req, res) => res.send("Render Puppeteer Service is Live (Ultra HD)! 🚀"));
 
