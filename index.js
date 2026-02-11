@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 const PORT = process.env.PORT || 4000;
 
-app.get("/", (req, res) => res.send("Render Puppeteer Service is Live (Ultra HD)! 🚀"));
+app.get("/", (req, res) => res.send("Render Puppeteer Service is Live (Custom Fonts Ready)! 🚀"));
 
 app.post("/convert", async (req, res) => {
   const { html, width = 1080, height = 1080, type = "png" } = req.body;
@@ -41,39 +41,31 @@ app.post("/convert", async (req, res) => {
 
     const page = await browser.newPage();
 
-    // --- QUALITY UPGRADE ---
-    // deviceScaleFactor: 3 (Ultra Sharp Mobile Quality)
-    await page.setViewport({
-      width: parseInt(width),
+    // --- ULTRA HD QUALITY ---
+    await page.setViewport({ 
+      width: parseInt(width), 
       height: parseInt(height),
-      deviceScaleFactor: 3
+      deviceScaleFactor: 3 
     });
 
-    await page.setContent(html, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000
+    // Content Load
+    await page.setContent(html, { 
+      waitUntil: "domcontentloaded", 
+      timeout: 15000 
     });
 
-    // NEW: Register local font (Scheherazade New Bold) from your repo path
-    // Note: Path is case-sensitive. You uploaded to: Fonts/ScheherazadeNew-Bold.ttf
-    const fontCSS = `
-      @font-face {
-        font-family: "Scheherazade New";
-        src: url("file:///usr/src/app/Fonts/ScheherazadeNew-Bold.ttf") format("truetype");
-        font-weight: 700;
-        font-style: normal;
-      }
-    `;
-    await page.addStyleTag({ content: fontCSS });
+    // Humne 'index.js' se font inject karne wala code hata diya hai.
+    // Kyunki Dockerfile me 'fc-cache' chal chuka hai, 
+    // Ab bas HTML me font-family: 'Scheherazade New'; likhne se kaam ho jayega.
 
-    const imageBuffer = await page.screenshot({
+    const imageBuffer = await page.screenshot({ 
       type: type === "jpeg" ? "jpeg" : "png",
       fullPage: false,
       omitBackground: true
     });
 
-    console.log("Ultra HD Image generated.");
-
+    console.log("Image generated successfully.");
+    
     await page.close();
     await browser.close();
     browser = null;
