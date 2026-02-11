@@ -43,25 +43,37 @@ app.post("/convert", async (req, res) => {
 
     // --- QUALITY UPGRADE ---
     // deviceScaleFactor: 3 (Ultra Sharp Mobile Quality)
-    await page.setViewport({ 
-      width: parseInt(width), 
+    await page.setViewport({
+      width: parseInt(width),
       height: parseInt(height),
-      deviceScaleFactor: 3 
+      deviceScaleFactor: 3
     });
 
-    await page.setContent(html, { 
-      waitUntil: "domcontentloaded", 
-      timeout: 15000 
+    await page.setContent(html, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000
     });
 
-    const imageBuffer = await page.screenshot({ 
+    // NEW: Register local font (Scheherazade New Bold) from your repo path
+    // Note: Path is case-sensitive. You uploaded to: Fonts/ScheherazadeNew-Bold.ttf
+    const fontCSS = `
+      @font-face {
+        font-family: "Scheherazade New";
+        src: url("file:///usr/src/app/Fonts/ScheherazadeNew-Bold.ttf") format("truetype");
+        font-weight: 700;
+        font-style: normal;
+      }
+    `;
+    await page.addStyleTag({ content: fontCSS });
+
+    const imageBuffer = await page.screenshot({
       type: type === "jpeg" ? "jpeg" : "png",
       fullPage: false,
       omitBackground: true
     });
 
     console.log("Ultra HD Image generated.");
-    
+
     await page.close();
     await browser.close();
     browser = null;
