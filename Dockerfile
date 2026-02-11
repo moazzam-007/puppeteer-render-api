@@ -4,7 +4,7 @@ FROM ghcr.io/puppeteer/puppeteer:19.7.2
 # Root user permission
 USER root
 
-# Install font packages + fontconfig (for fc-cache)
+# 1. System Packages & Font Config Install
 RUN rm -f /etc/apt/sources.list.d/google*.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -15,7 +15,7 @@ RUN rm -f /etc/apt/sources.list.d/google*.list \
        fonts-freefont-ttf \
        fonts-thai-tlwg \
        fonts-noto-color-emoji \
-       fonts-amiri \
+       fonts-hosny-amiri \
        fonts-sil-scheherazade \
        fonts-liberation \
     && apt-get clean \
@@ -30,11 +30,11 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install --omit=dev --ignore-scripts
 
-# App source copy (includes your Fonts/ folder)
+# App source copy (Isme aapka 'Fonts' folder bhi copy ho jayega)
 COPY . .
 
-# Copy custom TTFs into system fonts and rebuild cache
-# NOTE: Path is case-sensitive. Folder name must be exactly "Fonts"
+# 2. Custom Font Install (Magic Step ✨)
+# Ye aapke GitHub ke 'Fonts' folder se file utha kar Linux ke system folder mein daal dega
 RUN mkdir -p /usr/share/fonts/truetype/custom \
     && cp -v Fonts/*.ttf /usr/share/fonts/truetype/custom/ \
     && fc-cache -f -v
