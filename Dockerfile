@@ -34,9 +34,11 @@ RUN npm install --omit=dev --ignore-scripts
 COPY . .
 
 # 2. Custom Font Install (Magic Step ✨)
-# Ye aapke GitHub ke 'Fonts' folder se file utha kar Linux ke system folder mein daal dega
+# TTF aur OTF dono fonts ko system me install karega
 RUN mkdir -p /usr/share/fonts/truetype/custom \
-    && cp -v Fonts/*.ttf /usr/share/fonts/truetype/custom/ \
+    && mkdir -p /usr/share/fonts/opentype/custom \
+    && cp -v Fonts/*.ttf /usr/share/fonts/truetype/custom/ 2>/dev/null || true \
+    && cp -v Fonts/*.otf /usr/share/fonts/opentype/custom/ 2>/dev/null || true \
     && fc-cache -f -v
 
 # Switch user
