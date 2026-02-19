@@ -45,24 +45,35 @@ app.post("/convert", async (req, res) => {
     await page.setViewport({ 
       width: parseInt(width), 
       height: parseInt(height),
-      deviceScaleFactor: 3 
+      deviceScaleFactor: 4  // 🔥 3 se 4 kiya — zyada sharp pixels
     });
 
-    // Content Load
+    // Content Load — ab saari resources (fonts, images, CSS) load hongi pehle
     await page.setContent(html, { 
-      waitUntil: "domcontentloaded", 
-      timeout: 15000 
+      waitUntil: "networkidle0",  // 🔥 domcontentloaded → networkidle0
+      timeout: 30000              // 🔥 15s → 30s timeout badhaya
     });
+
+    // Fonts aur rendering settle hone ke liye thoda extra wait
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Humne 'index.js' se font inject karne wala code hata diya hai.
     // Kyunki Dockerfile me 'fc-cache' chal chuka hai, 
     // Ab bas HTML me font-family: 'Scheherazade New'; likhne se kaam ho jayega.
 
-    const imageBuffer = await page.screenshot({ 
+    // 🔥 Screenshot with HIGH QUALITY settings
+    const screenshotOptions = { 
       type: type === "jpeg" ? "jpeg" : "png",
       fullPage: false,
       omitBackground: true
-    });
+    };
+
+    // 🔥 JPEG ke liye quality 100 set karo (default 80 hota hai — 20% loss!)
+    if (type === "jpeg") {
+      screenshotOptions.quality = 100;
+    }
+
+    const imageBuffer = await page.screenshot(screenshotOptions);
 
     console.log("Image generated successfully.");
     
